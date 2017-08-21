@@ -6857,6 +6857,8 @@ Please submit there instead, or use --nodevelproject to force direct submission.
                         help='Delete all binaries of packages for which the build failed')
     @cmdln.option('--broken', action='store_true',
                         help='Delete all binaries of packages for which the package source is bad')
+    @cmdln.option('--excluded', action='store_true',
+                        help='Delete all binaries of excluded packages')
     @cmdln.option('--unresolvable', action='store_true',
                         help='Delete all binaries of packages which have dependency errors')
     @cmdln.option('--all', action='store_true',
@@ -6909,6 +6911,8 @@ Please submit there instead, or use --nodevelproject to force direct submission.
             codes.append('broken')
         if opts.unresolvable:
             codes.append('unresolvable')
+        if opts.excluded:
+            codes.append('excluded')
         if len(codes) == 0:
             # don't do a second wipe if a filter got specified
             if opts.all or opts.repo or opts.arch:
