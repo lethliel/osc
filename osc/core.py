@@ -3246,6 +3246,12 @@ def makeurl(baseurl, l, query=[]):
 def http_request(method, url, headers={}, data=None, file=None):
     """wrapper around urllib2.urlopen for error handling,
     and to support additional (PUT, DELETE) methods"""
+
+    ### MARCO: Just here for testing. Will go into global
+    ### imports after everything is working
+    import requests
+    from requests.auth import HTTPBasicAuth
+
     def create_memoryview(obj):
         if sys.version_info < (2, 7, 99):
             # obj might be a mmap and python 2.7's mmap does not
@@ -3313,7 +3319,11 @@ def http_request(method, url, headers={}, data=None, file=None):
     try:
         if isinstance(data, str):
             data = bytes(data, "utf-8")
-        fd = urlopen(req, data=data)
+        #MARCO: Here goes the changes
+        #fd = urlopen(req, data=data)
+        urlcall = getattr(requests, method.lower())
+        fd = urlcall(url, auth=HTTPBasicAuth(api_host_options['user'], api_host_options['pass']), stream=True, data=data)
+        fd.raise_for_status()
 
     finally:
         if hasattr(conf.cookiejar, 'save'):
@@ -3321,8 +3331,10 @@ def http_request(method, url, headers={}, data=None, file=None):
 
     if filefd: filefd.close()
 
-    return fd
-
+    #MARCO: Here we return the raw data
+    #return fd
+    fd.raw.decode_content=1 #decoded of course
+    return fd.raw
 
 def http_GET(*args, **kwargs):    return http_request('GET', *args, **kwargs)
 def http_POST(*args, **kwargs):   return http_request('POST', *args, **kwargs)
@@ -3686,8 +3698,12 @@ def meta_exists(metatype,
     url = make_meta_url(metatype, path_args, apiurl)
     try:
         data = http_GET(url).readlines()
-    except HTTPError as e:
-        if e.code == 404 and create_new:
+    #MARCO The exception object changes
+    except requests.exceptions.HTTPError as e:
+    #except HTTPError as e:
+        #MARCO also the way we get the code
+        #if e.code == 404 and create_new:
+        if e.response.status_code == 404 and create_new:
             data = metatypes[metatype]['template']
             if template_args:
                 data = StringIO(data % template_args).readlines()
@@ -4498,7 +4514,9 @@ def get_group_meta(apiurl, group):
     try:
         f = http_GET(u)
         return ''.join(f.readlines())
-    except HTTPError:
+    #MARCO other except object
+    #except HTTPError:
+    except requests.exceptions.HTTPError:
         print('group \'%s\' not found' % group)
         return None
 
@@ -5907,7 +5925,9 @@ def streamfile(url, http_meth = http_GET, bufsize=8192, data=None, progress_obj=
         if retries > 1 and conf.config['http_debug']:
             print('\n\nRetry %d --' % (retries - 1), url, file=sys.stderr)
         f = http_meth.__call__(url, data = data)
-        cl = f.info().get('Content-Length')
+        # MARCO: The way we acces the header information has changed
+        #cl = f.info().get('Content-Length')
+        cl = f.getheader('Content-Length')
 
     if cl is not None:
         # sometimes the proxy adds the same header again
