@@ -5984,6 +5984,8 @@ Please submit there instead, or use --nodevelproject to force direct submission.
                     else:
                         queryconfig = '/usr/lib/build/queryconfig'
                     recipe = return_external(queryconfig, '--dist', f.name, 'type')
+                if not isinstance(recipe, str):
+                    recipe = recipe.decode('utf-8')
                 recipe = recipe.strip()
                 if recipe == 'arch':
                     recipe = 'PKGBUILD'

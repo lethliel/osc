@@ -5569,7 +5569,7 @@ class Repo:
 
 def get_repos_of_project(apiurl, prj):
     f = show_project_meta(apiurl, prj)
-    root = ET.fromstring(''.join(f))
+    root = ET.fromstring(b''.join(f))
 
     for node in root.findall('repository'):
         for node2 in node.findall('arch'):
@@ -6083,7 +6083,7 @@ def get_buildinfo(apiurl, prj, package, repository, arch, specfile=None, addlist
         f = http_POST(u, data=specfile)
     else:
         f = http_GET(u)
-    return f.read()
+    return f.read().decode('utf-8')
 
 
 def get_buildconfig(apiurl, prj, repository):

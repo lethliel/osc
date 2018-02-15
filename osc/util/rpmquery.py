@@ -107,7 +107,9 @@ class RpmQuery(packagequery.PackageQuery, packagequery.PackageQueryResult):
             if i.tag in self.default_tags + extra_tags or all_tags:
                 try: # this may fail for -debug* packages
                     self.__read_data(i, data)
-                except: pass
+                except:
+                    print('Failure for %s' % i.tag) 
+                    pass
         return self
 
     def __read_lead(self):
@@ -121,6 +123,7 @@ class RpmQuery(packagequery.PackageQuery, packagequery.PackageQueryResult):
 
     def __read_data(self, entry, data):
         off = entry.offset
+        print(entry.type)
         if entry.type == 2:
             entry.data = struct.unpack('!%dc' % entry.count, data[off:off + 1 * entry.count])
         if entry.type == 3:
@@ -129,6 +132,7 @@ class RpmQuery(packagequery.PackageQuery, packagequery.PackageQueryResult):
             entry.data = struct.unpack('!%di' % entry.count, data[off:off + 4 * entry.count])
         elif entry.type == 6:
             entry.data = unpack_string(data[off:])
+            print(entry.data)
         elif entry.type == 7:
             entry.data = data[off:off + entry.count]
         elif entry.type == 8 or entry.type == 9:
@@ -374,7 +378,8 @@ def unpack_string(data):
     """unpack a '\\0' terminated string from data"""
     val = ''
     for c in data:
-        c, = struct.unpack('!c', c)
+        print(bytes([c]))
+        #c, = struct.unpack('!c', bytes([c]))
         if c == '\0':
             break
         else:

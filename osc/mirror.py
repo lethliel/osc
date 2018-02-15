@@ -40,6 +40,8 @@ class OscMirrorGroup:
             except HTTPError as e:
                 if e.code == 414:
                     raise MGError
+                if e.code == 503:
+                    u = urlopen(mirror) 
                 tries += 1
                 continue
             f = open(filename, 'wb')

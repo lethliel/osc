@@ -790,7 +790,7 @@ def main(apiurl, opts, argv):
             print('Getting buildconfig from server and store to %s' % bc_filename)
             bc = get_buildconfig(apiurl, prj, repo)
             if not bc_file:
-                bc_file = open(bc_filename, 'w')
+                bc_file = open(bc_filename, 'wb')
             bc_file.write(bc)
             bc_file.flush()
     except HTTPError as e:
@@ -1150,7 +1150,10 @@ def main(apiurl, opts, argv):
         if bi.installonly_list:
             rpmlist.append('installonly: ' + ' '.join(bi.installonly_list) + '\n')
 
-    rpmlist_file = NamedTemporaryFile(prefix='rpmlist.')
+    if sys.version_info >= (3, 0):
+        rpmlist_file = NamedTemporaryFile(mode='w+t', prefix='rpmlist.')
+    else:
+        rpmlist_file = NamedTemporaryFile(prefix='rpmlist.')
     rpmlist_filename = rpmlist_file.name
     rpmlist_file.writelines(rpmlist)
     rpmlist_file.flush()
