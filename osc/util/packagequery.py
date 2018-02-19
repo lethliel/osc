@@ -64,7 +64,6 @@ class PackageQuery:
         extra_tags = ()
         pkgquery = None
         if magic[:4] == '\xed\xab\xee\xdb':
-            print('It is rpm')
             from . import rpmquery
             pkgquery = rpmquery.RpmQuery(f)
             extra_tags = extra_rpmtags

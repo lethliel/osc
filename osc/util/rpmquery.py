@@ -378,8 +378,7 @@ def unpack_string(data):
     """unpack a '\\0' terminated string from data"""
     val = ''
     for c in data:
-        print(bytes([c]))
-        #c, = struct.unpack('!c', bytes([c]))
+        c = struct.unpack('!c', bytes(bytearray([c])))[0].decode('utf-8')
         if c == '\0':
             break
         else:

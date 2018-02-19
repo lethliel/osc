@@ -183,7 +183,6 @@ class Fetcher:
                                              delete=False) as tmpfile:
                 mg.urlgrab(pac.filename, filename=tmpfile.name,
                            text='%s(%s) %s' % (prefix, pac.project, pac.filename))
-                print('Will move %s to %s/%s' % (tmpfile.name, pac.localdir, pac))
                 self.move_package(tmpfile.name, pac.localdir, pac)
         except Exception as e:
             if self.enable_cpio and e.errno == 256:
@@ -207,7 +206,6 @@ class Fetcher:
         if pac_obj and pac_obj.name.startswith('container:'):
             canonname = pac_obj.canonname
         if canonname is None:
-            print('I am here')
             pkgq = packagequery.PackageQuery.query(tmpfile, extra_rpmtags=(1044, 1051, 1052))
             if pkgq:
                 canonname = pkgq.canonname()
@@ -218,7 +216,6 @@ class Fetcher:
                 canonname = pac_obj.binary
 
         fullfilename = os.path.join(destdir, canonname)
-        print(fullfilename)
         if pac_obj is not None:
             pac_obj.canonname = canonname
             pac_obj.fullfilename = fullfilename
