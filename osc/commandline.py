@@ -141,12 +141,20 @@ class Osc(cmdln.Cmdln):
             print('Creating osc configuration file %s ...' % e.file, file=sys.stderr)
             import getpass
             config = {}
+            use_keyring = raw_input('Do you want to use a keyring? [y/N]')
+            if use_keyring == 'y':
+                keybackend = raw_input('Generic or Gnome Backend? [generic/gnome] (default: generic) :')
+                use_keyring = True
             config['user'] = raw_input('Username: ')
             config['pass'] = getpass.getpass()
-            if self.options.no_keyring:
-                config['use_keyring'] = '0'
-            if self.options.no_gnome_keyring:
-                config['gnome_keyring'] = '0'
+            if use_keyring and keybackend == 'generic':
+                config['use_keyring'] = '1'
+            if use_keyring and keybackend == 'gnome':
+                config['gnome_keyring'] = '1'
+            #if self.options.no_keyring:
+            #    config['use_keyring'] = '0'
+            #if self.options.no_gnome_keyring:
+            #    config['gnome_keyring'] = '0'
             if self.options.apiurl:
                 config['apiurl'] = self.options.apiurl
 
