@@ -304,6 +304,8 @@ apiurl = %(apiurl)s
 # you editing this file.
 #plaintext_passwd = %(plaintext_passwd)s
 
+use_tmpfs_as_pw_store = %(use_tmpfs_as_pw_store)s
+
 # limit the age of requests shown with 'osc req list'.
 # this is a default only, can be overridden by 'osc req list -D NNN'
 # Use 0 for unlimted.
@@ -375,6 +377,10 @@ pass = %(pass)s
 #keyring = 1
 """
 
+new_pwf_template = """
+[%(apiurl)s]
+pass = %(pass)s
+"""
 
 account_not_configured_text = """
 Your user account / password are not configured yet.
@@ -740,8 +746,10 @@ def write_initial_config(conffile, entries, custom_template=''):
     custom_template is an optional configuration template.
     """
     conf_template = custom_template or new_conf_template
+    pwf_template = new_pwf_template
     config = DEFAULTS.copy()
     config.update(entries)
+    pwfname = '/dev/shm/osc/pw_store'
     # at this point use_keyring and gnome_keyring are str objects
     if config['use_keyring'] == '1' and GENERIC_KEYRING:
         protocol, host, path = \
@@ -765,6 +773,12 @@ def write_initial_config(conffile, entries, custom_template=''):
         config['pass'] = ''
     else:
         config['passx'] = passx_encode(config['pass'])
+    if config['use_tmpfs_as_pw_store'] == '1':
+        fp = StringIO(pwf_template.strip() % config)
+        pwp = OscConfigParser.OscConfigParser(DEFAULTS)
+        pwp.readfp(fp)
+        write_config(pwfname, pwp)
+        config['pass'] = ''
 
     sio = StringIO(conf_template.strip() % config)
     cp = OscConfigParser.OscConfigParser(DEFAULTS)
@@ -801,6 +815,13 @@ def add_section(filename, url, user, passwd):
         cp.set(url, 'keyring', '1')
         cp.remove_option(url, 'pass')
         cp.remove_option(url, 'passx')
+    elif config['use_tmpfs_as_pw_store'] == '1':
+        pwp = get_configParser('/dev/shm/osc/pw_store')
+        pwp.add_section(url)
+        pwp.set(url, 'pass', passwd)
+        cp.set(url, 'user', user)
+        cp.remove_option(url, 'pass')
+        cp.remove_option(url, 'passx')
     else:
         cp.set(url, 'user', user)
         if not config['plaintext_passwd']:
@@ -810,6 +831,7 @@ def add_section(filename, url, user, passwd):
             cp.remove_option(url, 'passx')
             cp.set(url, 'pass', passwd)
     write_config(filename, cp)
+    write_config('/dev/shm/osc/pw_store', pwp)
 
 
 def get_config(override_conffile=None,
@@ -931,7 +953,22 @@ def get_config(override_conffile=None,
             #FIXME: this could actually be the ideal spot to take defaults
             #from the general section.
             user = cp.get(url, 'user', raw=True)        # need to set raw to prevent '%' expansion
-            password = cp.get(url, 'pass', raw=True)    # especially on password!
+            if config['use_tmpfs_as_pw_store'] == '1':
+                try:
+                    fp = get_configParser('/dev/shm/osc/pw_store')
+                    password = fp.get(url, 'pass', raw=True)
+                except:
+                    import getpass
+                    pwfname = '/dev/shm/osc/pw_store'
+                    config['pass'] = getpass.getpass()
+                    fp = StringIO(new_pwf_template.strip() % config)
+                    pwp = OscConfigParser.OscConfigParser(DEFAULTS)
+                    pwp.readfp(fp)
+                    write_config(pwfname, pwp)
+                    config['pass'] = ''
+            else:
+                password = cp.get(url, 'pass', raw=True)    # especially on password!
+
             try:
                 passwordx = passx_decode(cp.get(url, 'passx', raw=True))  # especially on password!
             except:

@@ -146,9 +146,16 @@ class Osc(cmdln.Cmdln):
         except oscerr.NoConfigfile as e:
             print(e.msg, file=sys.stderr)
             print('Creating osc configuration file %s ...' % e.file, file=sys.stderr)
+            tmpfs_pass = 'n'
+            tmpfs_pass = raw_input('Do you want to store the password in a tmpfs? [y|N]: ')
             import getpass
             config = {}
             config['user'] = raw_input('Username: ')
+            config['use_tmpfs_as_pw_store'] = '0'
+            if tmpfs_pass in ('y', 'Y'):
+                if not os.path.exists('/dev/shm/osc/'):
+                    os.makedirs('/dev/shm/osc/')
+                config['use_tmpfs_as_pw_store'] = '1'
             config['pass'] = getpass.getpass()
             if self.options.no_keyring:
                 config['use_keyring'] = '0'
