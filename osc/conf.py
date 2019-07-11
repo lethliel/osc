@@ -871,6 +871,9 @@ def get_config(override_conffile=None,
         raise oscerr.ConfigError(msg, conffile)
 
     config = dict(cp.items('general', raw=1))
+    if override_apiurl:
+        # check if apiurl is a valid url
+        config['apiurl'] = override_apiurl
     config['conffile'] = conffile
 
     typed_opts = ((boolean_opts, cp.getboolean), (integer_opts, cp.getint))
@@ -948,6 +951,7 @@ def get_config(override_conffile=None,
             print(err, file=sys.stderr)
             password = ''
 
+
         # Read credentials from config
         if user is None:
             #FIXME: this could actually be the ideal spot to take defaults
@@ -958,14 +962,16 @@ def get_config(override_conffile=None,
                     fp = get_configParser('/dev/shm/osc/pw_store')
                     password = fp.get(url, 'pass', raw=True)
                 except:
-                    import getpass
-                    pwfname = '/dev/shm/osc/pw_store'
-                    config['pass'] = getpass.getpass()
-                    fp = StringIO(new_pwf_template.strip() % config)
-                    pwp = OscConfigParser.OscConfigParser(DEFAULTS)
-                    pwp.readfp(fp)
-                    write_config(pwfname, pwp)
-                    config['pass'] = ''
+                    if config['apiurl'] == url:
+                        import getpass
+                        config['pass'] = getpass.getpass()
+                        password = config['pass']
+                        pwfname = '/dev/shm/osc/pw_store'
+                        pwp = get_configParser('/dev/shm/osc/pw_store')
+                        pwp.add_section(url)
+                        pwp.set(url, 'pass', password)
+                        write_config(pwfname, pwp)
+                        config['pass'] = ''
             else:
                 password = cp.get(url, 'pass', raw=True)    # especially on password!
 
