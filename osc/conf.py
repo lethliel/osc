@@ -957,7 +957,7 @@ def get_config(override_conffile=None,
             #FIXME: this could actually be the ideal spot to take defaults
             #from the general section.
             user = cp.get(url, 'user', raw=True)        # need to set raw to prevent '%' expansion
-            if config['use_tmpfs_as_pw_store'] == '1':
+            if 'use_tmpfs_as_pw_store' in config and config['use_tmpfs_as_pw_store'] == '1':
                 try:
                     fp = get_configParser('/dev/shm/osc/pw_store')
                     password = fp.get(url, 'pass', raw=True)
