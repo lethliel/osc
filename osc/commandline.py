@@ -9236,6 +9236,47 @@ Please submit there instead, or use --nodevelproject to force direct submission.
             result = delete_comment(apiurl, args[1])
             print(result)
 
+    @cmdln.option('-v', '--verbose', action='store_true',
+                        help='print extra information')
+    @cmdln.alias('ps')
+    def do_projectstaging(self, subcmd, opts, *args):
+        """${cmd_name}: Handle staging
+
+        Create, Add, Delete staging projects
+        Add requests to staging
+
+        more info to come
+        """
+
+        args = slash_split(args)
+
+        subcmdlist = ['create', 'add', 'delete', 'show', 'request', 'rq']
+        rqcmdlist = ['add', 'delete', 'show']
+
+        if not args or args[0] not in subcmdlist:
+            raise oscerr.WrongArgs('Unknown operation. Choose one of %s.' \
+                                               % ', '.join(subcmdlist))
+
+        cmd = args[0]
+        del args[0]
+
+        if cmd == 'create':
+            print('create Staging workflow')
+        elif cmd == 'add':
+            print('add another project to staging')
+        elif cmd == 'delete':
+            print('delete workflow or staging project')
+        elif cmd == 'show':
+            print('show status of staging workflow')
+        elif cmd in ['rq', 'request']:
+            if not args or args[0] not in rqcmdlist:
+                raise oscerr.WrongArgs('Unknown operation. Choose one of %s.' \
+                                                    % ', '.join(rqcmdlist))
+            rqcmd = args[0]
+            del args[0]
+
+
+
     def _load_plugins(self):
         plugin_dirs = [
             '/usr/lib/osc-plugins',
