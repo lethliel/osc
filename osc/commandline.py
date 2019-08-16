@@ -9236,6 +9236,12 @@ Please submit there instead, or use --nodevelproject to force direct submission.
             result = delete_comment(apiurl, args[1])
             print(result)
 
+    @cmdln.option('-g', '--group',
+            help='group', metavar='GROUP')
+    @cmdln.option('-s', '--staging',
+            help='staging project', metavar='STAGING')
+    @cmdln.option('-r', '--requests',
+            help='request(s)', metavar='REQUESTS')
     @cmdln.option('-v', '--verbose', action='store_true',
                         help='print extra information')
     @cmdln.alias('ps')
@@ -9250,30 +9256,73 @@ Please submit there instead, or use --nodevelproject to force direct submission.
 
         args = slash_split(args)
 
-        subcmdlist = ['create', 'add', 'delete', 'show', 'request', 'rq']
-        rqcmdlist = ['add', 'delete', 'show']
+        subcmdlist = ['create', 'add', 'delete', 'show', 'request', 'rq', 'list', 'accept']
+        rqcmdlist = ['add', 'delete', 'list']
 
         if not args or args[0] not in subcmdlist:
             raise oscerr.WrongArgs('Unknown operation. Choose one of %s.' \
                                                % ', '.join(subcmdlist))
 
+        if opts.staging:
+            staging_list = []
+            st = opts.staging.split(',')
+            staging_list.extend(st)
+
         cmd = args[0]
         del args[0]
 
+        apiurl = self.get_api_url()
+        ps = ProjectStaging(apiurl)
+
         if cmd == 'create':
-            print('create Staging workflow')
+            if not opts.group:
+                raise oscerr.WrongArgs('Please specify a group for the staging with -g <groupname>')
+            ps.create(args[0], opts.group)
+            create_sub = input('Do you want to automatically create staging projects? [Y|n]: ') or 'y'
+            if create_sub in ['y', 'Y']:
+                staging_list = []
+                for i in ['A', 'B']:
+                    staging_list.append(args[0] + ":Staging:" + i)
+                print(staging_list)
+                ps.add(args[0], staging_list)
         elif cmd == 'add':
-            print('add another project to staging')
+            if not opts.staging:
+                raise oscerr.WrongArgs('You need to specify at least on Staging Project you want to create with -s')
+            ps.add(args[0], staging_list)
         elif cmd == 'delete':
-            print('delete workflow or staging project')
+            ps.delete(args[0])
         elif cmd == 'show':
-            print('show status of staging workflow')
+            for st in opts.staging.split(','):
+                res = ps.show(args[0], st)
+                print(res.read())
+                root = ET.parse(res).getroot()
+                print(root.get('name'))
+                print(root.get('state'))
+                print(root.find('staged_requests').get('count'))
+        elif cmd == 'list':
+            res = ps.list(args[0])
+            root = ET.parse(res).getroot()
+            for stage in root.findall('staging_project'):
+                print(stage.get('name'))
+        elif cmd == 'accept':
+            for st in staging_list:
+                ps.accept(args[0], st)
         elif cmd in ['rq', 'request']:
             if not args or args[0] not in rqcmdlist:
                 raise oscerr.WrongArgs('Unknown operation. Choose one of %s.' \
                                                     % ', '.join(rqcmdlist))
             rqcmd = args[0]
             del args[0]
+            if rqcmd == 'add':
+                rqlist = []
+                rq = opts.requests.split(',')
+                rqlist.extend(rq)
+                ps.add_request(args[0], staging_list[0], rqlist)
+            elif rqcmd == 'list':
+                for st in staging_list:
+                    print(st)
+                    res = ps.list_requests(args[0], st)
+                    print(res.read())
 
 
 

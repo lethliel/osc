@@ -484,6 +484,65 @@ class Serviceinfo:
 
         return 0
 
+class ProjectStaging:
+    """ProjectStaging actions and information
+    """
+    def __init__(self, apiurl):
+        self.apiurl = apiurl
+
+    def create(self, project, group):
+        groupxml = "<workflow managers='%s'/>" % group
+        u = makeurl(self.apiurl, ['staging', project, 'workflow'])
+        f = http_POST(u, data=groupxml)
+        print(f.read())
+
+    def delete(self, project):
+        u = makeurl(self.apiurl, ['staging', project, 'workflow'])
+        f = http_DELETE(u)
+        print(f.read())
+
+    def list(self, project):
+        u = makeurl(self.apiurl, ['staging', project, 'staging_projects'])
+        f  = http_GET(u)
+        return f
+
+    def add(self, project, staging_list):
+        stagingxml = "<workflow>"
+        for stage in staging_list:
+            stagingxml += ("<staging_project>%s</staging_project>" % stage)
+        stagingxml += "</workflow>"
+        u = makeurl(self.apiurl, ['staging', project, 'staging_projects'])
+        f = http_POST(u, data=stagingxml)
+        print(f.read())
+
+    def show(self, project, stage):
+        u = makeurl(self.apiurl, ['staging', project, 'staging_projects', stage])
+        f  = http_GET(u)
+        return f
+
+    def accept(self, project, stage):
+        u = makeurl(self.apiurl, ['staging', project, 'staging_projects', stage, 'accept'])
+        f = http_POST(u)
+        print(f.read())
+
+    def add_request(self, project, stage, rqids):
+        requestxml = "<requests>"
+        for rq in rqids:
+            requestxml += "<number>%s</number>" % rq
+        requestxml += "</requests>"
+        u = makeurl(self.apiurl, ['staging', project, 'staging_projects', stage, 'staged_requests'])
+        f = http_POST(u, data=requestxml)
+        print(f.read())
+
+    def delete_requests(self, project, reqids):
+        print("TODO")
+
+    def list_requests(self, project, stage):
+        u = makeurl(self.apiurl, ['staging', project, 'staging_projects', stage, 'staged_requests'])
+        f = http_GET(u)
+        return f
+
+
 class Linkinfo:
     """linkinfo metadata (which is part of the xml representing a directory
     """
