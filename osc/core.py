@@ -494,16 +494,24 @@ class ProjectStaging:
         groupxml = "<workflow managers='%s'/>" % group
         u = makeurl(self.apiurl, ['staging', project, 'workflow'])
         f = http_POST(u, data=groupxml)
-        print(f.read())
+        return f
 
     def delete(self, project):
-        u = makeurl(self.apiurl, ['staging', project, 'workflow'])
-        f = http_DELETE(u)
-        print(f.read())
+        try:
+            u = makeurl(self.apiurl, ['staging', project, 'workflow'])
+            f = http_DELETE(u)
+        except HTTPError:
+            return None
+        return f
 
     def list(self, project):
-        u = makeurl(self.apiurl, ['staging', project, 'staging_projects'])
-        f  = http_GET(u)
+        try:
+            u = makeurl(self.apiurl, ['staging', project, 'staging_projects'])
+            f  = http_GET(u)
+        except HTTPError as e:
+            if e.code == 400:
+                return None
+            raise e
         return f
 
     def add(self, project, staging_list):
@@ -513,7 +521,7 @@ class ProjectStaging:
         stagingxml += "</workflow>"
         u = makeurl(self.apiurl, ['staging', project, 'staging_projects'])
         f = http_POST(u, data=stagingxml)
-        print(f.read())
+        return f
 
     def show(self, project, stage):
         u = makeurl(self.apiurl, ['staging', project, 'staging_projects', stage])
@@ -523,7 +531,7 @@ class ProjectStaging:
     def accept(self, project, stage):
         u = makeurl(self.apiurl, ['staging', project, 'staging_projects', stage, 'accept'])
         f = http_POST(u)
-        print(f.read())
+        return f
 
     def add_request(self, project, stage, rqids):
         requestxml = "<requests>"
@@ -532,10 +540,16 @@ class ProjectStaging:
         requestxml += "</requests>"
         u = makeurl(self.apiurl, ['staging', project, 'staging_projects', stage, 'staged_requests'])
         f = http_POST(u, data=requestxml)
-        print(f.read())
+        return f
 
-    def delete_requests(self, project, reqids):
-        print("TODO")
+    def delete_requests(self, project, stage, rqids):
+        requestxml = "<requests>"
+        for rq in rqids:
+            requestxml += "<number>%s</number>" % rq
+        requestxml += "</requests>"
+        u = makeurl(self.apiurl, ['staging', project, 'staging_projects', stage, 'staged_requests'])
+        f = http_DELETE(u, data=requestxml)
+        return f
 
     def list_requests(self, project, stage):
         u = makeurl(self.apiurl, ['staging', project, 'staging_projects', stage, 'staged_requests'])
