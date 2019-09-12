@@ -9251,7 +9251,59 @@ Please submit there instead, or use --nodevelproject to force direct submission.
         Create, Add, Delete staging projects
         Add requests to staging
 
-        more info to come
+        This can be issued within a project directory or with the
+        project as the first argument.
+
+        If you operate on a staging project or with requests the
+        staging project has to be given with -s and the request has
+        to be given with -r
+
+        You can add multiple requests / stagings comma serparated.
+        For example:
+        -s myprj:Staging:A, myprj:Staging:B
+        -r 1234, 12345
+
+        osc ps
+
+        For example:
+        linux:~/myproject/> osc ps create
+        or
+        osc ps create myproject
+
+        subcommands:
+            create    Create a staging workflow for the project
+            add       Add a staging project to a staging workflow
+                      using -s <staging project>
+            list      List all staging project associated to this
+                      workflow
+            show      Show information to one specific staging project
+                      using -s <staging project>
+            delete
+                      Delete complete staging workflow from project
+            accept
+                      Accept the staging given with -s. All requests in
+                      the staging project will be accepted
+
+
+        osc ps request
+
+        subcommands:
+            add       Add requests given with -r to a staging given with -s
+            delete    Delete requests given with -r from a staging given with -s
+            list      List all requests in a staging given with -s
+
+
+
+        Example Workflow:
+        osc ps create myprj -g group_for_review
+        osc ps add myprj -s myprj:Staging:A
+        osc ps request add myprj -s myprj:Staging:A -r 1234, 4567
+        osc ps request delete myprj -s myprj:Staging:A -r 1234
+        osc ps request list -s myprj:Staging:A
+        osc ps accept myprj -s myprj:Staging:A
+        osc ps show myprj -s myprj:Staging:A
+
+
         """
 
         args = slash_split(args)
@@ -9293,6 +9345,8 @@ Please submit there instead, or use --nodevelproject to force direct submission.
             cwd = os.getcwd()
             if is_project_dir(cwd) or is_package_dir(cwd):
                 project = store_read_project(cwd)
+            else:
+                raise oscerr.WrongArgs('Not a project working directory or no project given!')
         else:
             project = args[0]
 
@@ -9317,7 +9371,6 @@ Please submit there instead, or use --nodevelproject to force direct submission.
             if summary.text == 'Ok':
                 for stage in staging_list:
                     print('Staging %s added to %s' % (stage, project))
-
         elif cmd == 'delete':
             res = ps.list(project)
             root = ET.parse(res).getroot()
@@ -9340,13 +9393,17 @@ Please submit there instead, or use --nodevelproject to force direct submission.
             for st in opts.staging.split(','):
                 res = ps.show(project, st)
                 root = ET.parse(res).getroot()
-                # FIXME: Needs to be printed out nice
                 for child in root:
-                    print(child.tag, child.attrib)
-                    for cchild in child:
-                        print(cchild.tag, cchild.attrib)
-
-
+                    tag = child.tag
+                    count = int(child.get('count'))
+                    print('%s: %s' % (tag, count))
+                    if count > 0 and tag != 'history':
+                        for cchild in child:
+                            rq_id = cchild.get('id')
+                            creator = cchild.get('creator')
+                            state = cchild.get('state')
+                            pkg = cchild.get('package')
+                            print('\t\t%s\t\t%s\t\t%s\t\t%s' % (rq_id, creator, state, pkg))
         elif cmd == 'list':
             res = ps.list(project)
             if res:
@@ -9397,8 +9454,6 @@ Please submit there instead, or use --nodevelproject to force direct submission.
                     if summary.text == 'Ok':
                         for rq in rqlist:
                             print('Request %s deleted from %s' % (rq, staging_list[0]))
-
-
 
     def _load_plugins(self):
         plugin_dirs = [

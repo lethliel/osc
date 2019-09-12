@@ -484,6 +484,7 @@ class Serviceinfo:
 
         return 0
 
+
 class ProjectStaging:
     """ProjectStaging actions and information
     """
