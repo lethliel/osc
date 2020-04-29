@@ -1,3 +1,10 @@
+"""
+.. module:: core
+    :platform: Unix
+    :synopsis: The osc core module
+
+"""
+
 # Copyright (C) 2006 Novell Inc.  All rights reserved.
 # This program is free software; it may be used, copied, modified
 # and distributed under the terms of the GNU General Public Licence,
