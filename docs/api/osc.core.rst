@@ -13,8 +13,10 @@ basic structures
 
 
 .. autoclass:: Serviceinfo
-    :members:
+    :members: read, getProjectGlobalServices, addVerifyFile, addDownloadUrl, addSetVersion
 
 
 .. autoclass:: Linkinfo
     :members:
+
+.. autoclass:: Project
