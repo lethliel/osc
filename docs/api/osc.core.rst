@@ -21,4 +21,4 @@ basic structures
 
 .. autoclass:: Project
 
-.. automethod:: commitNewPackage
+.. autofunction:: commitNewPackage
