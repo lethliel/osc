@@ -20,3 +20,5 @@ basic structures
     :members:
 
 .. autoclass:: Project
+
+.. automethod:: commitNewPackage
