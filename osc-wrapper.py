@@ -7,3 +7,5 @@ This wrapper allows osc to be called from the source directory during developmen
 import osc.babysitter
 
 osc.babysitter.main()
+
+#This is a test
